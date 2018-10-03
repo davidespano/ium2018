@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity"
+    android:background="@color/colorRed"> <!-- vedi dichiarazione in colors.xml -->
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Calcolatrice"
+            android:id="@+id/titolo"
+            android:textColor="#ffffffff"
+            android:textSize="36dp" />
+
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="36dp" />
+
+        <!-- pulsante di incremento -->
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/incremento"
+            android:text="+"
+            android:textSize="36dp"
+            android:clickable="true"
+            />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="36dp" />
+
+        <!-- visualizza risultato numerico -->
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:background="#ffffffff"
+            android:textAlignment="center"
+            android:id="@+id/input"
+            />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="36dp" />
+
+        <!-- pulsante di decremento -->
+        <Button
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/decremento"
+            android:text="-"
+            android:textSize="36dp"
+            android:clickable="true"
+            />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="36dp" />
+
+        <!-- per il gruppo B: lo vedremo assieme Lunedì 8 -->
+        <SeekBar
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/seekBar"
+            android:max="100"/>
+
+
+    </LinearLayout>
+
+</android.support.constraint.ConstraintLayout>
