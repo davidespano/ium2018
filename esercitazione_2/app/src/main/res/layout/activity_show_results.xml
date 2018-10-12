@@ -36,11 +36,10 @@
                 android:layout_height="wrap_content"
                 android:text="Nome:"
                 android:textSize="36dp" />
-            <EditText
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/nome"
-                android:hint="es: Paolo"/>
+                android:id="@+id/nome"/>
 
             <!-- Cognome -->
             <Space
@@ -51,11 +50,10 @@
                 android:layout_height="wrap_content"
                 android:text="Cognome:"
                 android:textSize="36dp" />
-            <EditText
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/cognome"
-                android:hint="es: Bianchi"/>
+                android:id="@+id/cognome"/>
 
             <!-- Data di nascita -->
             <Space
@@ -66,15 +64,21 @@
                 android:layout_height="wrap_content"
                 android:text="Data di Nascita:"
                 android:textSize="36dp" />
-            <EditText
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/data"
-                android:hint="es: 01/01/1990"/>
+                android:id="@+id/data"/>
 
             <Space
                 android:layout_width="match_parent"
                 android:layout_height="36dp" />
+
+            <Button
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/ok"
+                android:text="Ok"
+                />
         </LinearLayout>
     </ScrollView>
 
