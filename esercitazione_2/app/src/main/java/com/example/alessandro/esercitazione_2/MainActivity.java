@@ -18,10 +18,9 @@ public class MainActivity extends AppCompatActivity {
     Persona persona=new Persona();
     DatePickerFragment datePickerFragment = new DatePickerFragment();
     // nella vostra applicazione sarà qualcosa del tipo
-    // "com.example.il_vostro_nome_utente.nome_progetto"
+    // "com.example.il_vostro_nome_utente.nome_progetto.Persona"
     public static final String
-            PERSONA_EXTRA="com.example.alessandro.esercitazione_2";
-
+            PERSONA_EXTRA="com.example.alessandro.esercitazione_2.Persona";
     // GRUPPO B - lo vedremo il prossimo lunedì
     TextView errore;
 
