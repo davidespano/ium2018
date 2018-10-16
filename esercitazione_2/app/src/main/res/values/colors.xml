@@ -3,4 +3,6 @@
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303F9F</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="rossoChiaro"> #8fd20101</color>
+    <color name="rossoScuro">#FFAC0000</color>
 </resources>

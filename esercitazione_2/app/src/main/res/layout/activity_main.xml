@@ -17,6 +17,24 @@
             android:layout_height="match_parent"
             android:orientation="vertical">
 
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="16dp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ERRORE"
+                android:id="@+id/errore"
+                android:gravity="center"
+                android:textSize="30dp"
+                android:background="@color/rossoChiaro"
+                android:textColor="@color/rossoScuro"
+                />
+            <Space
+                android:layout_width="match_parent"
+                android:layout_height="16dp" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
