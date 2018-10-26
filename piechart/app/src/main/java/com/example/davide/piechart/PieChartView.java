@@ -70,6 +70,32 @@ public class PieChartView extends View {
     private int radius = 100;
 
     /**
+     * Il fattore di scala
+     */
+    private float zoom = 1.0f;
+
+    /**
+     * il punto in alto a sinistra del viewport rispetto al sistema di riferimento del controllo
+     */
+    private PointF translate = new PointF(-200,-300);
+
+    /**
+     * Posizione precedente del tocco per implementare il pan della vista
+     */
+    private PointF previousTouch = new PointF(0,0);
+
+    /**
+     * vero se sto eseguendo un'interazione multitouch, falso altrimenti
+     */
+    private boolean multitouch = false;
+
+    /**
+     * distanza fra due tocchi durante l'interazione multitouch
+     */
+    private double oldDistance = 0.0;
+
+
+    /**
      * Costruttore del controllo
      * @param context Il contesto grafico su cui disegnare
      */
@@ -238,8 +264,10 @@ public class PieChartView extends View {
      */
     @Override
     protected void onDraw(Canvas canvas) {
-        // utilizziamo questo oggetto per definire
-        // colori, font, tipi di linee ecc
+
+        // fase 1- disegno lo sfondo
+
+        // utilizziamo questo oggetto per definire colori, font, tipi di linee ecc
         Paint paint = new Paint();
 
         // impostiamo l'antialiasing
@@ -249,6 +277,15 @@ public class PieChartView extends View {
         paint.setColor(this.getBackgroundColor());
         canvas.drawRect(0, 0, canvas.getWidth(), canvas.getHeight(), paint);
 
+        // salvo le trasformazioni correnti
+        canvas.save();
+
+        // fase 2 - disegno la torta
+        // applico la scalatura, usiamo un fattore omogeneo (uguale su x e y)
+        canvas.scale(this.getZoom(), this.getZoom());
+
+        // applico la traslazione del punto di vista
+        canvas.translate(getTranslate().x, getTranslate().y);
 
         // angolo dal quale si inizia a disegnare
         float alpha = -90.0f;
@@ -330,6 +367,10 @@ public class PieChartView extends View {
                     paint);
         }
 
+        // ripristino la situazione iniziale del cavas (non è strettamente necessario in
+        // questo caso, ma ogni volta che si fa la save, si fa la restore
+        canvas.restore();
+
 
     }
 
@@ -337,8 +378,15 @@ public class PieChartView extends View {
     public boolean onTouchEvent(MotionEvent event){
 
         // ottento le coordinate del tocco dal descrittore dell'evento
-        float x = event.getX();
-        float y = event.getY();
+        float tx = event.getX();
+        float ty = event.getY();
+
+        // riporto le coordinate del tocco dal sistema di riferimento dello schermo
+        // a quello del controllo. In pratica, applico le trasformazioni
+        // (scalatura e traslazione) in ordine inverso
+        float x = (tx / getZoom()) - getTranslate().x;
+        float y = (ty / getZoom()) - getTranslate().y;
+
 
         switch (event.getAction()) {
 
@@ -350,9 +398,85 @@ public class PieChartView extends View {
                     selectedIndex = this.pickCorrelation(x, y);
                     // richiedo di aggiornare il disegno
                     this.invalidate();
+
+                    // salvo la posizione corrente del tocco in caso di pan
+                    this.previousTouch.x = tx;
+                    this.previousTouch.y = ty;
                     return true;
                 }
                 break;
+
+            case MotionEvent.ACTION_MOVE:
+                switch(event.getPointerCount()){
+                    case 1:
+                        if(multitouch){
+                            // usciamo immediatamente se l'utente ha sollevato un dito dopo
+                            // l'interazione multitouch
+                            return true;
+                        }
+                        // recuperiamo il delta fra la posizione corrente e quella
+                        // precedente. Dobbiamo dividere per il fattore di scala
+                        // per avere la distanza nel sistema di riferimento
+                        // originario
+                        float dx = (tx - this.previousTouch.x) / this.zoom;
+                        float dy = (ty - this.previousTouch.y) / this.zoom;
+                        this.previousTouch.x = tx;
+                        this.previousTouch.y = ty;
+
+                        // aggiorniamo la traslazione spostandola di dx sulle x
+                        // e di dy sulle y
+                        this.translate.set(
+                                this.translate.x + dx,
+                                this.translate.y + dy
+                        );
+                        this.invalidate();
+                        return true;
+
+                    case 2:
+                        // qui gestiamo il pinch
+
+                        // teniamo traccia del fatto che l'utente abbia iniziato un pinch
+                        // (vedi sopra)
+                        multitouch = true;
+
+                        // recuperiamo la posizione corrente del tocco 1 e del tocco 2
+                        MotionEvent.PointerCoords touch1 = new MotionEvent.PointerCoords();
+                        MotionEvent.PointerCoords touch2 = new MotionEvent.PointerCoords();
+
+                        event.getPointerCoords(0, touch1);
+                        event.getPointerCoords(1, touch2);
+
+                        // calcoliamo la distanza corrente
+                        double distance = Math.sqrt(
+                                Math.pow(touch2.x - touch1.x, 2) +
+                                        Math.pow(touch2.y - touch1.y, 2));
+
+                        // confrontiamo con la precedente
+                        if (distance - oldDistance > 0) {
+                            // ingrandisco la vista
+                            zoom += 0.03;
+                            this.invalidate();
+                        }
+
+                        if (distance - oldDistance < 0) {
+                            // rimpicciolisco la vista
+                            zoom -= 0.03;
+                            this.invalidate();
+                        }
+
+                        oldDistance = distance;
+
+                        return true;
+
+                }
+
+            case MotionEvent.ACTION_UP:
+                // reset delle variabili di stato
+                this.previousTouch.x = 0.0f;
+                this.previousTouch.y = 0.0f;
+                multitouch = false;
+                oldDistance = 0.0f;
+                return true;
         }
 
         return false;
@@ -364,49 +488,71 @@ public class PieChartView extends View {
      * @param y L'ordinata del punto
      * @return l'indice della fetta di torta
      */
-    private int pickCorrelation(float x, float y){
-       if(enclosing.contains(x, y)){
-           // sottraggo alla x e alla y le coordinate del centro
-           float dx = x - center.x;
-           float dy = y - center.y;
+    private int pickCorrelation(float x, float y) {
 
-           // ottengo la distanza dal centro
-           float r = (float) Math.sqrt(dx * dx + dy * dy);
+        if (enclosing.contains(x, y)) {
+            // sottraggo alla x e alla y le coordinate del centro
+            float dx = x - center.x;
+            float dy = y - center.y;
 
-           float cos = dx/r;
-           float sin = - dy/r;
+            // ottengo la distanza dal centro
+            float r = (float) Math.sqrt(dx * dx + dy * dy);
 
-           double angle = Math.toDegrees(Math.atan2(sin, cos));
+            float cos = dx / r;
+            float sin = -dy / r;
 
-           Log.d("ANGLE", "angle: " + angle + " cos " + cos + " sin " + sin);
+            // l'angolo varia tra -180 e 180
+            double angle = Math.toDegrees(Math.atan2(sin, cos));
 
-           if(angle > 90 && angle < 360){
-               angle = angle - 360;
-           }
+            Log.d("ANGLE", "angle: " + angle + " cos " + cos + " sin " + sin);
 
-           float alpha = 90.0f;
-           float alpha1;
 
-           // 1% in radianti
-           float p2a = 360.0f / 100.0f;
-           float p;
-           for(int i = 0; i<percent.size(); i++){
-               p = percent.get(i);
-               alpha1 =  alpha - p * p2a;
-               if(angle > alpha1 && angle < alpha){
-                   return i;
-               }
-               alpha = alpha1;
+            // faccio in modo che l'angolo vari fra 90 e -270. Spazzando gli angoli
+            // in senso orario, i valori degli angoli sono decrescenti, cosa che ci torna
+            // utile per il for. Considerando per esempio i punti in cui la circonferenza
+            // goniometrica incontra gli assi a partire da 90 gradi, la successione di
+            // angoli è la seguente:
+            // 90, 0, -90, -180, -270
+            if (angle > 90 && angle < 180) {
+                angle = angle - 360;
+            }
 
-           }
+            float alpha = 90.0f;
+            float alpha1;
 
-       }else{
-           return -1;
-       }
-       return 1;
+            // 1% in gradi
+            float p2a = 360.0f / 100.0f;
+            float p;
+            for (int i = 0; i < percent.size(); i++) {
+                p = percent.get(i);
+                alpha1 = alpha - p * p2a;
+                if (angle > alpha1 && angle < alpha) {
+                    return i;
+                }
+                alpha = alpha1;
+
+            }
+
+        } else {
+            return -1;
+        }
+        return -1;
     }
 
 
+    public float getZoom() {
+        return zoom;
+    }
 
+    public void setZoom(float zoom) {
+        this.zoom = zoom;
+    }
 
+    public PointF getTranslate() {
+        return translate;
+    }
+
+    public void setTranslate(PointF translate) {
+        this.translate = translate;
+    }
 }
